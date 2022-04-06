@@ -110,27 +110,14 @@ class improve_pic(preprocessing):
             curr_merged.loc[:, 'x'] -= curr_left
             curr_merged.loc[:, 'y_big'] -= curr_top
 
-            curr_merged = curr_merged.set_index('x'). \
-                reindex(list(range(0, im.shape[1])))['y_big']. \
-                interpolate('nearest'). \
-                bfill(). \
-                ffill()
-
-            X = np.arange(im.shape[0])
-            y = curr_merged.values
-            rows = X[:, None]
-
-            relevant_indices = np.where(y > rows, 1, 0)
             skeleton = skeletonize(1 - im)
             patches = skeleton & curr_merged_bin
-            temp_patches_pixel = patches[0][0]
             patches[0][0] = 0
             patches_stats = cv2.connectedComponentsWithStats(patches)
             df_patches = pd.DataFrame(patches_stats[2], columns=['left', 'top', 'width', 'height', 'area'])[1:]
 
             small_patches_stats = cv2.connectedComponentsWithStats((curr_small > 0) | (patches))[2]
             df_small_patches = pd.DataFrame(small_patches_stats, columns=['left', 'top', 'width', 'height', 'area'])[1:]
-            df_small = self.my_connected_components(curr_small > 0, return_stats=True)
 
             big_patches_stats = cv2.connectedComponentsWithStats((curr_big > 0) | (patches))[2]
             df_big_patches = pd.DataFrame(big_patches_stats, columns=['left', 'top', 'width', 'height', 'area'])[1:]
@@ -157,9 +144,16 @@ class improve_pic(preprocessing):
             merged_patched_original['val_original'] = merged_patched_original['val_original'].fillna(0)
             if merged_patched_original['val_original'].nunique() == 2 and 0 in merged_patched_original[
                 'val_original'].values:
-                self.img[curr_top:curr_bottom, curr_left:curr_right] = final_patches_im
+                curr_inds = np.where(np.isin(self.img_copy[curr_top:curr_bottom, curr_left:curr_right],
+                                             merged_patched_original['val_original'].unique()))# + np.array(
+                    #[curr_top, curr_left]).reshape(2, -1)
+                #self.img[curr_top:curr_bottom, curr_left:curr_right] = final_patches_im
+                #temp_img = np.ones(self.img.shape)*255
+                #temp_img[curr_top:curr_bottom, curr_left:curr_right] = final_patches_im
+                #self.img[curr_inds] = temp_img[curr_inds]
+                self.img[curr_top: curr_bottom, curr_left: curr_right][curr_inds] = final_patches_im[curr_inds]
+
             else:
                 print("no")
-
-
-
+path = '../stam_old/sfaradi_efrat/7.jpg'
+p = improve_pic(path=path)#, model_path='assets/cnn_model_v3.h5', train_mode=True)
