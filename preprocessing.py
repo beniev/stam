@@ -53,6 +53,7 @@ def return_graph(df, orientation, problematic, delete_problematic=True):
 
 class preprocessing:
     def __init__(self, path):
+        np.random.seed(42)
         self.path = path
         self.raw_img = cv2.imread(self.path)
         self.binary_img = self.apply_threshold(self.raw_img)
@@ -66,10 +67,9 @@ class preprocessing:
         self.median_width = np.median(self.img_stats[2][:, 2][1:])
         self.median_height = np.median(self.img_stats[2][:, 3][1:])
         self.median_area = np.median(self.img_stats[2][:, 4][1:])
-        self.to_pad_vertical = self.median_height * 2.5
-        self.to_pad_horizontal = self.median_width * 2.5
         self.n_connected_components = self.img_stats[1].max() + 1
         self.img_copy = self.img_stats[1].copy()
+
 
     def my_connected_components(self, img, return_stats=False):
         if img[0][0] != 0:

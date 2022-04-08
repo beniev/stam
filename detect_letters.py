@@ -11,7 +11,7 @@ from tensorflow.keras.models import load_model
 
 class detect_letters(improve_pic):
 
-    def __init__(self, save_letters_to_s3=False, model_path='assets/cnn_model.pkl',train_mode=False, *args, **kwargs):
+    def __init__(self, save_letters_to_s3=False, model_path='assets/cnn_model.pkl', train_mode=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.save_letters_to_s3 = save_letters_to_s3
         self.model = load_model(model_path)
@@ -245,7 +245,6 @@ class detect_letters(improve_pic):
         else:
             return letters_df, letters2train
 
+
 path = '../stam_old/sfaradi_efrat/7.jpg'
 p = detect_letters(path=path, model_path='assets/cnn_model_v3.h5', train_mode=True)
-
-

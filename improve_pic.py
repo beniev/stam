@@ -11,6 +11,18 @@ class improve_pic(preprocessing):
         super().__init__(*args, **kwargs)
         self.img2 = self.img.copy()
         self.find_connected_tags()  # updates img to include also tags
+        self.img = self.apply_threshold(self.img)
+        self.img = self.img.astype('uint8')
+        self.aligned = cv2.merge([self.img, self.img, self.img])
+        self.connectivity = 8
+        self.img_stats = cv2.connectedComponentsWithStats(self.img.max() - self.img, self.connectivity, cv2.CV_32S)
+        self.median_width = np.median(self.img_stats[2][:, 2][1:])
+        self.median_height = np.median(self.img_stats[2][:, 3][1:])
+        self.median_area = np.median(self.img_stats[2][:, 4][1:])
+        self.to_pad_vertical = self.median_height * 2.5
+        self.to_pad_horizontal = self.median_width * 2.5
+        self.n_connected_components = self.img_stats[1].max() + 1
+        self.img_copy = self.img_stats[1].copy()
 
     def find_connected_tags(self):
         big = cv2.connectedComponentsWithStats(self.img.max() - self.img, connectivity=8)
@@ -145,15 +157,8 @@ class improve_pic(preprocessing):
             if merged_patched_original['val_original'].nunique() == 2 and 0 in merged_patched_original[
                 'val_original'].values:
                 curr_inds = np.where(np.isin(self.img_copy[curr_top:curr_bottom, curr_left:curr_right],
-                                             merged_patched_original['val_original'].unique()))# + np.array(
-                    #[curr_top, curr_left]).reshape(2, -1)
-                #self.img[curr_top:curr_bottom, curr_left:curr_right] = final_patches_im
-                #temp_img = np.ones(self.img.shape)*255
-                #temp_img[curr_top:curr_bottom, curr_left:curr_right] = final_patches_im
-                #self.img[curr_inds] = temp_img[curr_inds]
+                                             merged_patched_original['val_original'].unique()))
                 self.img[curr_top: curr_bottom, curr_left: curr_right][curr_inds] = final_patches_im[curr_inds]
 
-            else:
-                print("no")
 path = '../stam_old/sfaradi_efrat/7.jpg'
 p = improve_pic(path=path)#, model_path='assets/cnn_model_v3.h5', train_mode=True)
