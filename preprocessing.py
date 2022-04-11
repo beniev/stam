@@ -7,8 +7,7 @@ from collections import Counter
 import networkx as nx
 
 pd.options.mode.chained_assignment = None
-# from tools import return_graph
-import os
+
 
 
 def line(p1, p2):
@@ -32,23 +31,7 @@ def intersection(L1, L2):
         return False
 
 
-def return_graph(df, orientation, problematic, delete_problematic=True):
-    df1 = df.reset_index()
-    g = nx.Graph()
-    g = nx.from_pandas_edgelist(df1, 'index', orientation)
-    if delete_problematic:
-        g.remove_nodes_from(problematic)
-    connected_components = nx.connected_components(g)
-    node2id = {}
-    for cid, component in enumerate(connected_components):
-        for node in component:
-            node2id[node] = cid
-    node2id = {k: v for k, v in node2id.items() if not pd.isna(k)}
-    if 'right' in orientation:
-        col_name = 'group_right_{}'.format(delete_problematic)
-    elif 'left' in orientation:
-        col_name = 'group_left_{}'.format(delete_problematic)
-    return {col_name: df1['index'].map(node2id)}
+
 
 
 class preprocessing:
@@ -70,6 +53,22 @@ class preprocessing:
         self.n_connected_components = self.img_stats[1].max() + 1
         self.img_copy = self.img_stats[1].copy()
 
+    def return_graph(self, df, orientation, problematic, delete_problematic=True):
+        df1 = df.reset_index()
+        g = nx.from_pandas_edgelist(df1, 'index', orientation)
+        if delete_problematic:
+            g.remove_nodes_from(problematic)
+        connected_components = nx.connected_components(g)
+        node2id = {}
+        for cid, component in enumerate(connected_components):
+            for node in component:
+                node2id[node] = cid
+        node2id = {k: v for k, v in node2id.items() if not pd.isna(k)}
+        if 'right' in orientation:
+            col_name = 'group_right_{}'.format(delete_problematic)
+        elif 'left' in orientation:
+            col_name = 'group_left_{}'.format(delete_problematic)
+        return {col_name: df1['index'].map(node2id)}
 
     def my_connected_components(self, img, return_stats=False):
         if img[0][0] != 0:
@@ -324,7 +323,7 @@ class preprocessing:
         correct_letters_in_prob = prob_df.loc[
             (prob_df['height'] < median_height * 1.4)].index
         problematic = problematic - set(correct_letters_in_prob)
-        right_group = return_graph(df.copy(), 'closest_right', problematic)
+        right_group = self.return_graph(df.copy(), 'closest_right', problematic)
         df = df.assign(**right_group)
         group2size = df.groupby('group_right_True').size().to_dict()
         df['group_size'] = df['group_right_True'].map(group2size)

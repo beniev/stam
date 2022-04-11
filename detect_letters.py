@@ -27,6 +27,9 @@ class detect_letters(improve_pic):
         else:
             self.letters_df = self.create_letters_stats()
 
+        self.letters_df = self.letters_df[self.letters_df['area'] > self.letters_df['area'].median() / 20]
+        self.letters_df=self.letters_df.reset_index(drop=True)
+
     def pad_letter(self, curr_img, const_val=255):
         curr_height = curr_img.shape[0]
         curr_width = curr_img.shape[1]

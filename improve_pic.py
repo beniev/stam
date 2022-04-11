@@ -160,5 +160,3 @@ class improve_pic(preprocessing):
                                              merged_patched_original['val_original'].unique()))
                 self.img[curr_top: curr_bottom, curr_left: curr_right][curr_inds] = final_patches_im[curr_inds]
 
-path = '../stam_old/sfaradi_efrat/7.jpg'
-p = improve_pic(path=path)#, model_path='assets/cnn_model_v3.h5', train_mode=True)
