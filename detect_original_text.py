@@ -7,11 +7,18 @@ import cv2
 import re
 from collections import Counter
 import nltk
+
+
 class detect_original_text(improve_order):
-    def __init__(self,*args,**kwargs):
+    def __init__(self, source="torah", *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.source = source
         self.right_left = self.calc_right_left()
+        self.calc_spaces()
         self.TH = self.calc_space_th()
+        self.calc_letter2write()
+        self.detected_text = self.detect_real_text()
+        self.detected_plain_text = ' '.join(self.detected_text)
 
     def calc_right_left(self):
         sparse_im = sparse.csr_matrix(self.img_copy).tocoo()
@@ -67,11 +74,12 @@ class detect_original_text(improve_order):
             if pd.isna(s['closest_right_with_problematic']):
                 return s['letters']
             if pd.isna(self.letters_df.loc[self.letters_df['index'] == s['closest_right_with_problematic'], \
-                                      'group_right'].values[0]):
+                                           'group_right'].values[0]):
                 curr_color = s['letter_colors']
                 right_color = self.letters_df.loc[self.letters_df['index'] == s['closest_right_with_problematic'], \
-                                             'letter_colors'].values[0]
-                space = self.right_left.loc[self.right_left['adj'].isin(list(product(curr_color, right_color))), 'space'].min()
+                                                  'letter_colors'].values[0]
+                space = self.right_left.loc[
+                    self.right_left['adj'].isin(list(product(curr_color, right_color))), 'space'].min()
                 if space <= self.TH:
                     res = '_' + s['letters']
                 elif space > self.TH:
@@ -84,13 +92,15 @@ class detect_original_text(improve_order):
             elif pd.isna(s['closest_left']):
                 res = res + ' '
             return res
+
         self.letters_df['letter2write'] = self.letters_df.apply(add_underscore_and_spaces_before_letter, axis=1)
 
     def detect_real_text(self):
         # finds the text in Torah that matches to the current image
         # step 1: read Torah text
-        with open('text/torah', 'r', encoding="utf8") as f:
-            t = f.readlines()
+        if self.source == "torah":
+            with open('text/torah', 'r', encoding="utf8") as f:
+                t = f.readlines()
         t = [a for a in t if 'פרק' not in a]
         t = [a for a in t if len(a) >= 30 or len(a) <= 1]
         t = '\n'.join(t)
@@ -182,3 +192,4 @@ class detect_original_text(improve_order):
                     break
         ret_text = t_margin_split[start_pos:end_pos]
         return ret_text
+

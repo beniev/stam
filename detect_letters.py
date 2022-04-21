@@ -28,7 +28,7 @@ class detect_letters(improve_pic):
             self.letters_df = self.create_letters_stats()
 
         self.letters_df = self.letters_df[self.letters_df['area'] > self.letters_df['area'].median() / 20]
-        self.letters_df=self.letters_df.reset_index(drop=True)
+        self.letters_df = self.letters_df.reset_index(drop=True)
 
     def pad_letter(self, curr_img, const_val=255):
         curr_height = curr_img.shape[0]
@@ -56,7 +56,7 @@ class detect_letters(improve_pic):
                             constant_values=const_val)
         return padded_img
 
-    def decide_if_leg(self, curr_letter_bounds, c_bound, curr_img, relevants, const_val=255):
+    def decide_if_leg(self, curr_letter_bounds, c_bound, curr_img, relevants, colors=[], const_val=255):
         if curr_letter_bounds[3] > self.median_height * 2:
             return False
         if c_bound[3] > self.median_height * 2:
@@ -87,7 +87,13 @@ class detect_letters(improve_pic):
             curr_img = curr_img1.copy()
             curr_img = np.array(Image.fromarray(curr_img.astype('uint8')).resize((60, 60)))
             predicted = self.model.predict(curr_img.reshape(1, curr_img.shape[0], curr_img.shape[1], 1)).argmax() + 1
-            if predicted in [2, 4, 5, 6, 10, 19, 20, 23]:
+            # whole_letter_img = self.img[
+            #            min(curr_letter_bounds[1], c_bound[1]):max(curr_letter_bounds[1] + curr_letter_bounds[3],
+            #                                                       c_bound[1] + c_bound[3]),
+            #            min(curr_letter_bounds[0], c_bound[0]):max(curr_letter_bounds[0] + curr_letter_bounds[2],
+            #                                                       c_bound[0] + c_bound[2])]
+            # return True
+            if predicted in [2, 4, 5, 6, 10, 11, 19, 20, 23]:
                 return True
             if predicted == 12:
                 pass  # TODO: decide what to do when equals to ל
@@ -247,7 +253,3 @@ class detect_letters(improve_pic):
             return letters_df
         else:
             return letters_df, letters2train
-
-
-path = '../stam_old/sfaradi_efrat/7.jpg'
-p = detect_letters(path=path, model_path='assets/cnn_model_v3.h5', train_mode=True)

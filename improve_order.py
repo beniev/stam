@@ -113,11 +113,11 @@ class improve_order(detect_letters):
             (prob_df['height'] < self.median_height * 1.4) & (prob_df['probability'] > 0.96)].index
         problematic = problematic - set(correct_letters_in_prob)
 
-        right_group = self.return_graph(self.letters_df.copy(), 'closest_right')
+        right_group = self.return_graph(self.letters_df.copy(), 'closest_right',problematic)
         self.letters_df = self.letters_df.assign(**right_group)
-        left_group = self.return_graph(self.letters_df.copy(), 'closest_left')
+        left_group = self.return_graph(self.letters_df.copy(), 'closest_left',problematic)
         self.letters_df = self.letters_df.assign(**left_group)
-        full_right_group = self.return_graph(self.letters_df.copy(), 'closest_right', False)
+        full_right_group = self.return_graph(self.letters_df.copy(), 'closest_right',problematic, False)
         self.letters_df = self.letters_df.assign(**full_right_group)
         # df = df.sort_values(by=['group_right_True', 'right'], ascending=[True, False])
         s = self.letters_df.groupby('group_right_False')['group_right_True'].nunique() > 1
@@ -141,7 +141,7 @@ class improve_order(detect_letters):
         close_sides = [np.array(sorted(set(cs) - set(curr_problematic_inds))) for cs in close_sides]
         closest_right = [cs[arr[cs][:, 1] > a[1]] if len(cs) > 0 else [] for cs, a in zip(close_sides, arr)]
         self.letters_df['closest_right'] = [cs[arr[cs][:, 1].argmin()] if len(cs) > 0 else np.nan for cs in closest_right]
-        right_group = self.return_graph(self.letters_df.copy(), 'closest_right')
+        right_group = self.return_graph(self.letters_df.copy(), 'closest_right',problematic)
         self.letters_df = self.letters_df.assign(**right_group)
 
         self.letters_df['group_right'] = self.letters_df['group_right_True']
