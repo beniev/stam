@@ -42,9 +42,9 @@ class improve_pic(preprocessing):
         merged_analysis = cv2.connectedComponentsWithStats(merged_im.max() - merged_im, connectivity=8)
         merged_stats = pd.DataFrame(merged_analysis[2], columns=['left', 'top', 'width', 'height', 'area'])[1:]
         # Create "is_big" column for merged_stats df to know if it is from big or from small
-        bs = big_stats[['top', 'left']]
+        bs = big_stats[['top', 'left', 'area']]
         bs['is_big'] = True
-        is_big = merged_stats.merge(bs, on=['top', 'left'], how='left')['is_big']
+        is_big = merged_stats.merge(bs, on=['top', 'left', 'area'], how='left')['is_big']
         is_big = is_big.fillna(False)
         merged_stats.reset_index(inplace=True)
         merged_stats.index = merged_stats['index']
@@ -159,4 +159,3 @@ class improve_pic(preprocessing):
                 curr_inds = np.where(np.isin(self.img_copy[curr_top:curr_bottom, curr_left:curr_right],
                                              merged_patched_original['val_original'].unique()))
                 self.img[curr_top: curr_bottom, curr_left: curr_right][curr_inds] = final_patches_im[curr_inds]
-

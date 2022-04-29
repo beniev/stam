@@ -9,7 +9,6 @@ import networkx as nx
 pd.options.mode.chained_assignment = None
 
 
-
 def line(p1, p2):
     '''coefficients of a line, based on 2 points'''
     A = (p1[1] - p2[1])
@@ -31,9 +30,6 @@ def intersection(L1, L2):
         return False
 
 
-
-
-
 class preprocessing:
     def __init__(self, path):
         np.random.seed(42)
@@ -43,6 +39,7 @@ class preprocessing:
         self.h, self.w = self.get_median_size_based_on_center()
         self.img, self.gray_img, self.small_img = self.transform_perspective()
         self.img = self.apply_threshold(self.img)
+        self.update_big_small_after_crop()
         self.img = self.img.astype('uint8')
         self.aligned = cv2.merge([self.img, self.img, self.img])
         self.connectivity = 8
@@ -82,6 +79,7 @@ class preprocessing:
         if return_stats:
             res = pd.DataFrame(res[2], columns=['left', 'top', 'width', 'height', 'area'])[1:]
         return res
+
     def rgb2gray(self, img):
         if len(img.shape) == 3 & img.shape[-1] == 3:  # img is RGB
             return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -472,5 +470,17 @@ class preprocessing:
         small_img = small_img.astype(int)
         return img, gray_img, small_img
 
+    def update_big_small_after_crop(self):
+        img = self.filter_small_blacks(self.img, is_cropped=True)[0]
 
-
+        # Get the "small components" image in order to attach later the tags
+        big_stats = self.my_connected_components(img, return_stats=True)
+        median_area = big_stats['area'].median()
+        temp_small_img = ((img == self.img) * 255).astype('uint8')
+        temp_small = cv2.connectedComponentsWithStats(temp_small_img.max() - temp_small_img, connectivity=8)
+        temp_small_stats = pd.DataFrame(temp_small[2], columns=['left', 'top', 'width', 'height', 'area'])[1:]
+        temp_small_stats = temp_small_stats[
+            (temp_small_stats['area'] >= median_area // 100) & (temp_small_stats['area'] >= 4)]
+        small_img = (~np.isin(temp_small[1], temp_small_stats.index) * 255).astype('uint8')
+        self.img = img
+        self.small_img = self.small_img & small_img

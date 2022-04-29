@@ -13,6 +13,8 @@ class detect_errors(match):
         self.additional_letters = self.detect_additional_letters()
         self.vertical_connected = self.detect_vertical_connected()
         self.dibukim_df, self.dibukim_inds = self.detect_dibukim()
+        self.small_spaces_between_words = self.detect_small_spaces_between_words()
+        self.big_spaces_inside_word = self.detect_big_spaces_inside_word()
 
     def detect_missing_words(self):
         missing_words_inds = set(range(len(self.detected_text))) - set(
@@ -64,11 +66,11 @@ class detect_errors(match):
         return merged, inds
 
     def detect_small_spaces_between_words(self):
-        pass
+        inds = self.letters_df.loc[(self.letters_df['is_end_word']) & (self.letters_df['space'] < self.TH)].index.values
+        return inds
 
     def detect_big_spaces_inside_word(self):
-        pass
+        inds = self.letters_df.loc[(~self.letters_df['is_end_word']) & (self.letters_df['space'] > self.TH)].index
+        return inds
 
 
-path = '../stam_old/sfaradi_efrat/7.jpg'
-p = detect_errors(path=path, model_path='assets/cnn_model_v3.h5', train_mode=True, source="torah")

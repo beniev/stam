@@ -84,7 +84,6 @@ class detect_original_text(improve_order):
                     res = '_' + s['letters']
                 elif space > self.TH:
                     res = '_ ' + s['letters']
-                print('yes')
             else:
                 res = s['letters']
             if s['space'] > self.TH:
@@ -144,7 +143,7 @@ class detect_original_text(improve_order):
         security = n_words // 10
         t_margin = ' '.join(tt[max_i - security:max_i + n_words + security])
         text_split = detected_text.split()
-        N = 10
+        N = 30
         all_dists = []
         t_margin_split = t_margin.split()
         for t in text_split[:N]:

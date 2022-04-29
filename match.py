@@ -4,11 +4,11 @@ import pandas as pd
 import re
 import numpy as np
 
+
 class match(detect_original_text):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.match_detected_to_real()
-
 
     def match_detected_to_real(self):
         detected_text = self.letters_df.groupby('group_right')['letter2write'].sum().str.cat(sep='').strip()
@@ -37,12 +37,15 @@ class match(detect_original_text):
         self.letters_df['real_word'] = self.letters_df['ind_in_real_text'].apply(
             lambda i: words[ind2word[i]] if i >= 0 else np.nan)
         self.letters_df['is_detected_end_word'] = self.letters_df['letter2write'].apply(lambda s: s
-                                                                              .endswith(' '))
+                                                                                        .endswith(' '))
         self.letters_df['detected_word_group'] = self.letters_df['is_detected_end_word'].shift(1).fillna(0).cumsum()
         self.letters_df['is_new_word_in'] = self.letters_df['letter2write'].apply(
             lambda x: 1 if '_' in str(x) and ' ' in str(x) else 0)
         self.letters_df['is_new_word_in'] = self.letters_df['is_new_word_in'].cumsum()
-        self.letters_df['detected_word_group'] = self.letters_df['detected_word_group'] + self.letters_df['is_new_word_in']
+        self.letters_df['detected_word_group'] = self.letters_df['detected_word_group'] + self.letters_df[
+            'is_new_word_in']
+        # making sure each detected_word_group will be on the same line
+        self.letters_df['detected_word_group'] = self.letters_df.groupby(['detected_word_group', 'group_right']).ngroup()
         self.letters_df['detected_word'] = self.letters_df.groupby('detected_word_group')['letter2write'].transform(sum)
         self.letters_df['real_word_ind_shift_down'] = self.letters_df['real_word_ind'].shift()
         self.letters_df['real_word_ind_shift_up'] = self.letters_df['real_word_ind'].shift(-1)
@@ -81,4 +84,5 @@ class match(detect_original_text):
             lambda x: x.isnull().all() and len(x) > 1)
         for c2d in cols2del:
             del self.letters_df[c2d]
-
+        self.letters_df['is_end_word'] = (self.letters_df['real_word_ind_curated'] != self.letters_df[
+            'real_word_ind_curated'].shift(-1)) & ~pd.isna(self.letters_df['real_word_ind_curated'])

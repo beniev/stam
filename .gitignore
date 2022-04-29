@@ -17,6 +17,8 @@ db.sqlite3
 #data folders
 /assets/
 /output/
+/fonts/
+/debug/
 
 # macOS
 ._*
